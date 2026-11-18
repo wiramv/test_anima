@@ -2,7 +2,7 @@
 
 Video tutorial 3D berbahasa Indonesia tentang cara merakit mobil mini. Animasi dibangun dengan **React**, **Remotion**, dan **Three.js** melalui `@remotion/three`, sehingga dapat dipreview dan dirender sepenuhnya secara lokal.
 
-Karakter pembuatnya adalah figur balok orisinal bernuansa kuning, merah, dan biru, mengikuti bahasa visual low-poly dari referensi yang diberikan. Dunia videonya berupa bengkel mainan yang terang, lengkap dengan sasis, roda, kabin, lampu, dan papan progres tutorial.
+Karakter pembuatnya adalah figur balok orisinal bernuansa kuning, merah, dan biru. Dunia videonya kini berupa bengkel mainan yang lebih detail dan halus, terinspirasi oleh referensi garasi: lantai ubin mengilap, lift mobil merah, kabinet perkakas, panel alat, rak cairan dan ban, jendela berbingkai, pipa plafon, serta mesin di atas palet.
 
 ## Prasyarat
 
@@ -62,7 +62,8 @@ src/
   Root.tsx              # Definisi komposisi
   CarAssembly.tsx       # Scene Three.js, karakter, mobil, dan overlay tutorial
 public/reference/
-  block-builder-reference.jpg  # Referensi visual yang diberikan pengguna
+  block-builder-reference.jpg  # Referensi visual karakter yang diberikan pengguna
+  garage-moc-reference.webp    # Referensi tata desain garasi yang diberikan pengguna
 ```
 
 ## Kustomisasi cepat
@@ -70,4 +71,4 @@ public/reference/
 - Ubah durasi/FPS/resolusi di `src/Root.tsx`.
 - Ubah teks langkah dan warna aksen pada konstanta `STEPS` di `src/CarAssembly.tsx`.
 - Ubah nama bengkel dari `defaultProps.workshopName` di `src/Root.tsx`.
-- Ubah bentuk mobil, figur, maupun bengkel pada komponen `Car`, `BlockyBuilder`, dan `Workshop`.
+- Ubah bentuk mobil, figur, maupun bengkel pada komponen `Car`, `BlockyBuilder`, dan `Workshop`. Bengkel yang lebih detail juga dipisahkan ke komponen `GarageWindow`, `ToolChest`, `WorkshopLift`, `PartsShelf`, `TireRack`, dan `EngineOnPallet`.

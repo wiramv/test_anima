@@ -8,7 +8,8 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import {useEffect} from 'react';
+import {useEffect, useMemo} from 'react';
+import {RoundedBoxGeometry} from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 type CarAssemblyProps = {
   workshopName: string;
@@ -127,15 +128,19 @@ const RoundedBlock: React.FC<{
   castShadow = true,
   receiveShadow = true,
 }) => {
+  // A small bevel and more segments keep the toy-brick language, while avoiding
+  // the faceted look of the first scene.
+  const geometry = useMemo(() => new RoundedBoxGeometry(1, 1, 1, 5, 0.085), []);
+
   return (
     <mesh
+      geometry={geometry}
       position={position}
       rotation={rotation}
       scale={scale}
       castShadow={castShadow}
       receiveShadow={receiveShadow}
     >
-      <boxGeometry args={[1, 1, 1, 2, 2, 2]} />
       <meshStandardMaterial
         color={color}
         roughness={roughness}
@@ -162,70 +167,233 @@ const CameraController: React.FC = () => {
   return null;
 };
 
+const GarageWindow: React.FC<{position: [number, number, number]; width?: number; height?: number}> = ({
+  position,
+  width = 2.15,
+  height = 1.75,
+}) => {
+  return (
+    <group position={position}>
+      <RoundedBlock scale={[width + 0.28, height + 0.28, 0.1]} color="#17242d" roughness={0.35} />
+      <RoundedBlock position={[0, 0, 0.065]} scale={[width, height, 0.04]} color="#bfdce1" roughness={0.12} metalness={0.12} />
+      <RoundedBlock position={[0, 0, 0.11]} scale={[0.12, height + 0.05, 0.05]} color="#1f2e35" roughness={0.38} />
+      <RoundedBlock position={[0, 0, 0.11]} scale={[width + 0.05, 0.12, 0.05]} color="#1f2e35" roughness={0.38} />
+    </group>
+  );
+};
+
+const ToolChest: React.FC<{position: [number, number, number]}> = ({position}) => {
+  return (
+    <group position={position}>
+      <RoundedBlock position={[0, 0.68, 0]} scale={[2.15, 1.22, 0.92]} color="#c73532" roughness={0.28} metalness={0.12} />
+      <RoundedBlock position={[0, 1.42, 0]} scale={[2.32, 0.17, 1.05]} color="#e25242" roughness={0.25} metalness={0.1} />
+      {[-0.35, 0, 0.35].map((y) => (
+        <group key={`drawer-${y}`} position={[0, y + 0.7, 0.48]}>
+          <RoundedBlock scale={[1.74, 0.23, 0.045]} color="#a62b30" roughness={0.33} />
+          <RoundedBlock position={[0, 0, 0.06]} scale={[0.55, 0.06, 0.035]} color="#e9e8df" roughness={0.28} metalness={0.35} />
+        </group>
+      ))}
+      <mesh position={[-0.74, 0.05, 0]} castShadow>
+        <cylinderGeometry args={[0.09, 0.09, 0.32, 16]} />
+        <meshStandardMaterial color="#394b55" roughness={0.42} metalness={0.55} />
+      </mesh>
+      <mesh position={[0.74, 0.05, 0]} castShadow>
+        <cylinderGeometry args={[0.09, 0.09, 0.32, 16]} />
+        <meshStandardMaterial color="#394b55" roughness={0.42} metalness={0.55} />
+      </mesh>
+    </group>
+  );
+};
+
+const WorkshopLift: React.FC = () => {
+  return (
+    <group position={[0, 0, -4.65]}>
+      {[-2.65, 2.65].map((x) => (
+        <group key={`lift-post-${x}`} position={[x, 0, 0]}>
+          <RoundedBlock position={[0, 2.35, 0]} scale={[0.5, 4.7, 0.52]} color="#d64038" roughness={0.3} metalness={0.14} />
+          <RoundedBlock position={[0, 0.14, 0.12]} scale={[1.2, 0.18, 1.25]} color="#af2b2e" roughness={0.34} />
+          <RoundedBlock position={[0, 2.9, 0.3]} scale={[0.66, 0.68, 0.13]} color="#1b2a33" roughness={0.37} metalness={0.45} />
+          <RoundedBlock position={[0, 4.4, 0.3]} scale={[0.27, 0.52, 0.12]} color="#ffd64d" roughness={0.28} emissive="#d59a00" />
+        </group>
+      ))}
+      <RoundedBlock position={[0, 4.66, 0]} scale={[5.55, 0.24, 0.48]} color="#c93432" roughness={0.3} metalness={0.13} />
+      <RoundedBlock position={[0, 1.27, 0.48]} scale={[3.85, 0.14, 0.35]} color="#1f2e35" roughness={0.39} metalness={0.5} />
+      <RoundedBlock position={[-1.8, 1.16, 0.96]} rotation={[0, 0.1, 0]} scale={[1.45, 0.09, 0.24]} color="#1f2e35" roughness={0.39} metalness={0.48} />
+      <RoundedBlock position={[1.8, 1.16, 0.96]} rotation={[0, -0.1, 0]} scale={[1.45, 0.09, 0.24]} color="#1f2e35" roughness={0.39} metalness={0.48} />
+    </group>
+  );
+};
+
+const PartsShelf: React.FC = () => {
+  const bottles = [
+    [-0.72, 0.43, '#63d3c6'],
+    [-0.36, 0.43, '#e25242'],
+    [0, 0.43, '#f4b84c'],
+    [0.36, 0.43, '#2d6fc7'],
+    [0.72, 0.43, '#63d3c6'],
+    [-0.65, 1.24, '#f4b84c'],
+    [-0.22, 1.24, '#e25242'],
+    [0.22, 1.24, '#63d3c6'],
+    [0.65, 1.24, '#2d6fc7'],
+  ] as const;
+
+  return (
+    <group position={[6.45, 0, -5.72]}>
+      <RoundedBlock position={[0, 1.45, 0]} scale={[2.45, 0.12, 0.54]} color="#3c4b53" roughness={0.37} metalness={0.36} />
+      <RoundedBlock position={[0, 2.25, 0]} scale={[2.45, 0.12, 0.54]} color="#3c4b53" roughness={0.37} metalness={0.36} />
+      <RoundedBlock position={[-1.08, 1.14, 0]} scale={[0.12, 2.35, 0.49]} color="#33424a" roughness={0.37} metalness={0.36} />
+      <RoundedBlock position={[1.08, 1.14, 0]} scale={[0.12, 2.35, 0.49]} color="#33424a" roughness={0.37} metalness={0.36} />
+      {bottles.map(([x, y, color], index) => (
+        <group key={`parts-bottle-${index}`} position={[x, y, 0.18]}>
+          <mesh castShadow>
+            <cylinderGeometry args={[0.14, 0.16, 0.45, 20]} />
+            <meshStandardMaterial color={color} roughness={0.3} />
+          </mesh>
+          <mesh position={[0, 0.27, 0]} castShadow>
+            <cylinderGeometry args={[0.08, 0.08, 0.1, 16]} />
+            <meshStandardMaterial color="#edf0e7" roughness={0.35} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+const TireRack: React.FC = () => {
+  return (
+    <group position={[3.45, 2.5, -6.7]}>
+      <RoundedBlock position={[0, -1.05, 0]} scale={[3.3, 0.11, 0.42]} color="#3c4b53" roughness={0.38} metalness={0.37} />
+      <RoundedBlock position={[0, 0.95, 0]} scale={[3.3, 0.11, 0.42]} color="#3c4b53" roughness={0.38} metalness={0.37} />
+      <RoundedBlock position={[-1.47, 0, 0]} scale={[0.12, 2.2, 0.42]} color="#3c4b53" roughness={0.38} metalness={0.37} />
+      <RoundedBlock position={[1.47, 0, 0]} scale={[0.12, 2.2, 0.42]} color="#3c4b53" roughness={0.38} metalness={0.37} />
+      {[-1.05, -0.35, 0.35, 1.05].map((x) => (
+        <group key={`stored-wheel-${x}`} position={[x, 0, 0.15]}>
+          <mesh castShadow receiveShadow>
+            <torusGeometry args={[0.34, 0.13, 16, 32]} />
+            <meshStandardMaterial color="#202a31" roughness={0.68} />
+          </mesh>
+          <mesh position={[0, 0, 0.03]} rotation={[Math.PI / 2, 0, 0]}>
+            <cylinderGeometry args={[0.15, 0.15, 0.06, 20]} />
+            <meshStandardMaterial color="#d5dde0" roughness={0.32} metalness={0.38} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+};
+
+const EngineOnPallet: React.FC = () => {
+  return (
+    <group position={[5.5, 0, 2.55]} rotation={[0, -0.38, 0]}>
+      <RoundedBlock position={[0, 0.12, 0]} scale={[2.0, 0.22, 1.18]} color="#cba665" roughness={0.52} />
+      <RoundedBlock position={[0, 0.37, 0]} scale={[1.5, 0.18, 0.82]} color="#856b43" roughness={0.56} />
+      <RoundedBlock position={[0, 0.82, 0]} scale={[1.22, 0.72, 0.83]} color="#737d82" roughness={0.34} metalness={0.58} />
+      <mesh position={[-0.46, 1.3, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.23, 0.23, 0.94, 24]} />
+        <meshStandardMaterial color="#9ba4a6" roughness={0.28} metalness={0.65} />
+      </mesh>
+      <mesh position={[0.46, 1.3, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
+        <cylinderGeometry args={[0.23, 0.23, 0.94, 24]} />
+        <meshStandardMaterial color="#9ba4a6" roughness={0.28} metalness={0.65} />
+      </mesh>
+      <mesh position={[0, 0.82, 0.5]} rotation={[Math.PI / 2, 0, 0]} castShadow>
+        <cylinderGeometry args={[0.38, 0.38, 0.18, 28]} />
+        <meshStandardMaterial color="#4b565a" roughness={0.29} metalness={0.72} />
+      </mesh>
+    </group>
+  );
+};
+
 const Workshop: React.FC = () => {
   const frame = useCurrentFrame();
-  const pulse = 0.55 + Math.sin(frame / 12) * 0.09;
+  const pulse = 0.6 + Math.sin(frame / 12) * 0.1;
+  const groutRows = [-0.78, -0.39, 0, 0.39, 0.78];
 
   return (
     <group>
-      <color attach="background" args={['#e7eef1']} />
-      <fog attach="fog" args={['#e7eef1', 16, 32]} />
+      <color attach="background" args={['#dbe6e8']} />
+      <fog attach="fog" args={['#dbe6e8', 17, 34]} />
 
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.035, 0]} receiveShadow>
         <planeGeometry args={[34, 34]} />
-        <meshStandardMaterial color="#cfd9dd" roughness={0.9} />
+        <meshStandardMaterial color="#c9d4d7" roughness={0.32} metalness={0.18} />
       </mesh>
-
-      <mesh position={[0, 4.2, -7.1]} receiveShadow>
-        <planeGeometry args={[21, 10]} />
-        <meshStandardMaterial color="#d6e0e4" roughness={0.95} />
-      </mesh>
-
-      <RoundedBlock
-        position={[0, 4.75, -6.85]}
-        scale={[6.4, 1.25, 0.22]}
-        color="#17354f"
-        roughness={0.35}
-      />
-      <RoundedBlock
-        position={[0, 4.75, -6.7]}
-        scale={[4.9, 0.18, 0.06]}
-        color="#ffd64d"
-        roughness={0.25}
-        emissive="#c68c00"
-      />
-      <RoundedBlock position={[-5.7, 2.55, -6.45]} scale={[1.6, 3.3, 0.24]} color="#88b8c8" />
-      <RoundedBlock position={[5.7, 2.55, -6.45]} scale={[1.6, 3.3, 0.24]} color="#88b8c8" />
-      <RoundedBlock position={[-5.7, 2.55, -6.28]} scale={[1.22, 2.84, 0.05]} color="#c2e2e7" />
-      <RoundedBlock position={[5.7, 2.55, -6.28]} scale={[1.22, 2.84, 0.05]} color="#c2e2e7" />
-
-      <RoundedBlock position={[-6.3, 0.55, -2.75]} scale={[1.45, 0.9, 1.45]} color="#f4b84c" />
-      <RoundedBlock position={[-6.1, 1.37, -2.75]} scale={[1.08, 0.65, 1.08]} color="#e25242" />
-      <RoundedBlock position={[6.2, 0.42, -3.25]} scale={[1.15, 0.66, 1.15]} color="#63d3c6" />
-      <RoundedBlock position={[6.35, 1.08, -3.25]} scale={[0.76, 0.65, 0.76]} color="#ffd64d" />
-
-      <RoundedBlock position={[-5.4, 0.11, 3.5]} scale={[3.3, 0.12, 0.42]} color="#7b8f9a" />
-      <RoundedBlock position={[5.7, 0.11, 3.5]} scale={[3.1, 0.12, 0.42]} color="#7b8f9a" />
-
-      {[-2.8, -1.4, 0, 1.4, 2.8].map((x) => (
-        <RoundedBlock
-          key={`floor-mark-${x}`}
-          position={[x, 0.015, 3.5]}
-          scale={[0.78, 0.02, 0.32]}
-          color="#f2f5f5"
-          roughness={0.85}
-          castShadow={false}
-        />
+      {[-8, -5.3, -2.6, 0, 2.6, 5.3, 8].map((x) => (
+        <RoundedBlock key={`floor-seam-x-${x}`} position={[x, 0.002, 0]} scale={[0.025, 0.015, 18]} color="#a7b6ba" roughness={0.75} castShadow={false} />
+      ))}
+      {[-7.8, -5.1, -2.4, 0.3, 3, 5.7].map((z) => (
+        <RoundedBlock key={`floor-seam-z-${z}`} position={[0, 0.002, z]} scale={[18, 0.015, 0.025]} color="#a7b6ba" roughness={0.75} castShadow={false} />
       ))}
 
-      <mesh position={[-4.62, 4.52, -6.55]}>
-        <sphereGeometry args={[0.16, 16, 16]} />
-        <meshStandardMaterial color="#ffd64d" emissive="#e6b100" emissiveIntensity={pulse} />
-      </mesh>
-      <mesh position={[4.62, 4.52, -6.55]}>
-        <sphereGeometry args={[0.16, 16, 16]} />
-        <meshStandardMaterial color="#ffd64d" emissive="#e6b100" emissiveIntensity={pulse} />
-      </mesh>
+      <RoundedBlock position={[0, 4.15, -7.1]} scale={[21, 10.1, 0.2]} color="#e8e8e3" roughness={0.79} />
+      {[-0.8, -0.4, 0, 0.4, 0.8].map((row) => (
+        <group key={`brick-course-${row}`} position={[0, 4.15 + row * 4.9, -6.97]}>
+          {groutRows.map((offset) => (
+            <RoundedBlock key={`brick-line-${offset}`} position={[0, offset, 0]} scale={[20.7, 0.022, 0.022]} color="#c5c8c6" roughness={0.9} castShadow={false} />
+          ))}
+        </group>
+      ))}
+      {[-5.05, 4.9].flatMap((baseX) =>
+        [-0.7, -0.18, 0.34].map((row, rowIndex) =>
+          [-0.5, 0.5].map((column) => (
+            <RoundedBlock
+              key={`brick-accent-${baseX}-${row}-${column}`}
+              position={[baseX + column * 0.72 + (rowIndex % 2 ? 0.28 : 0), 4 + row * 1.0, -6.84]}
+              scale={[0.64, 0.42, 0.11]}
+              color="#b77a52"
+              roughness={0.75}
+            />
+          )),
+        ),
+      )}
+
+      <GarageWindow position={[-1.9, 4.75, -6.84]} width={2.25} height={1.9} />
+      <GarageWindow position={[6.65, 4.75, -6.84]} width={1.7} height={1.9} />
+      <RoundedBlock position={[0, 5.87, -6.82]} scale={[2.8, 0.32, 0.12]} color="#233b49" roughness={0.35} />
+      <RoundedBlock position={[0, 5.87, -6.69]} scale={[2.28, 0.08, 0.04]} color="#ffd64d" roughness={0.25} emissive="#be8200" />
+
+      <group position={[-7.05, 2.98, -6.75]}>
+        <RoundedBlock scale={[2.2, 2.35, 0.1]} color="#9d2d31" roughness={0.35} metalness={0.12} />
+        {[-0.68, -0.23, 0.22, 0.67].map((x) => (
+          <group key={`tool-${x}`} position={[x, 0.1, 0.12]}>
+            <RoundedBlock scale={[0.08, 1.05, 0.05]} color="#232f35" roughness={0.4} metalness={0.48} />
+            <mesh position={[0, -0.63, 0.06]} rotation={[0, 0, Math.PI / 2]}>
+              <torusGeometry args={[0.13, 0.035, 10, 20]} />
+              <meshStandardMaterial color="#232f35" roughness={0.35} metalness={0.48} />
+            </mesh>
+          </group>
+        ))}
+      </group>
+      <ToolChest position={[-6.95, 0, -5.25]} />
+      <PartsShelf />
+      <TireRack />
+      <WorkshopLift />
+      <EngineOnPallet />
+
+      <group position={[-4.95, 5.94, -5.45]} rotation={[0, 0, Math.PI / 2]}>
+        <mesh castShadow>
+          <cylinderGeometry args={[0.16, 0.16, 2.2, 24]} />
+          <meshStandardMaterial color="#768891" roughness={0.32} metalness={0.58} />
+        </mesh>
+        <mesh position={[1.1, 0, 0]} castShadow>
+          <torusGeometry args={[0.16, 0.055, 12, 24]} />
+          <meshStandardMaterial color="#768891" roughness={0.32} metalness={0.58} />
+        </mesh>
+      </group>
+      <RoundedBlock position={[-4.8, 5.84, -5.45]} scale={[0.84, 0.12, 0.65]} color="#56666f" roughness={0.35} metalness={0.48} />
+
+      <RoundedBlock position={[-4.7, 0.06, 3.55]} scale={[3.65, 0.08, 0.5]} color="#687a83" roughness={0.4} metalness={0.38} />
+      <RoundedBlock position={[4.95, 0.06, 3.55]} scale={[2.5, 0.08, 0.5]} color="#687a83" roughness={0.4} metalness={0.38} />
+      {[-2.8, -1.4, 0, 1.4, 2.8].map((x) => (
+        <RoundedBlock key={`floor-mark-${x}`} position={[x, 0.02, 3.5]} scale={[0.76, 0.025, 0.32]} color="#f5f6ee" roughness={0.75} castShadow={false} />
+      ))}
+
+      {[-6.2, 6.2].map((x) => (
+        <mesh key={`warning-light-${x}`} position={[x, 5.55, -6.55]}>
+          <sphereGeometry args={[0.17, 24, 20]} />
+          <meshStandardMaterial color="#ffd64d" emissive="#e6b100" emissiveIntensity={pulse} roughness={0.26} />
+        </mesh>
+      ))}
     </group>
   );
 };
@@ -249,15 +417,19 @@ const Wheel: React.FC<{
       scale={[Math.max(0.01, p), Math.max(0.01, p), Math.max(0.01, p)]}
     >
       <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.62, 0.62, 0.36, 12]} />
+        <cylinderGeometry args={[0.62, 0.62, 0.36, 32]} />
         <meshStandardMaterial color="#172637" roughness={0.68} />
       </mesh>
+      <mesh rotation={[0, Math.PI / 2, 0]} castShadow receiveShadow>
+        <torusGeometry args={[0.52, 0.075, 12, 32]} />
+        <meshStandardMaterial color="#101b24" roughness={0.62} />
+      </mesh>
       <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.34, 0.34, 0.39, 12]} />
+        <cylinderGeometry args={[0.34, 0.34, 0.39, 28]} />
         <meshStandardMaterial color="#f1f4ef" roughness={0.32} metalness={0.25} />
       </mesh>
       <mesh rotation={[0, 0, Math.PI / 2]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.12, 0.12, 0.42, 10]} />
+        <cylinderGeometry args={[0.12, 0.12, 0.42, 20]} />
         <meshStandardMaterial color="#f3bc42" roughness={0.28} metalness={0.1} />
       </mesh>
     </group>
@@ -307,12 +479,24 @@ const Car: React.FC = () => {
         <RoundedBlock position={[1.13, 0.02, -0.16]} scale={[0.08, 0.76, 1.55]} color="#a6d7e2" roughness={0.15} />
         <RoundedBlock position={[0, 0.64, -0.16]} scale={[2.34, 0.16, 2.3]} color="#17354f" roughness={0.3} />
         <RoundedBlock position={[0, 0.2, -1.12]} scale={[1.9, 0.62, 0.08]} color="#83c8d7" roughness={0.12} />
+        <RoundedBlock position={[-1.17, -0.04, 0.3]} scale={[0.18, 0.22, 0.42]} color="#d9413f" roughness={0.28} />
+        <RoundedBlock position={[1.17, -0.04, 0.3]} scale={[0.18, 0.22, 0.42]} color="#d9413f" roughness={0.28} />
+        <group position={[0.46, -0.12, 0.45]} rotation={[0, 0, -0.12]}>
+          <mesh castShadow>
+            <torusGeometry args={[0.28, 0.045, 12, 28]} />
+            <meshStandardMaterial color="#233b49" roughness={0.37} metalness={0.38} />
+          </mesh>
+          <RoundedBlock position={[0, -0.16, 0]} scale={[0.06, 0.29, 0.05]} color="#233b49" roughness={0.37} metalness={0.38} />
+        </group>
       </group>
 
       <group position={[0, 0, (1 - details) * 3.4]} scale={[Math.max(0.01, details), Math.max(0.01, details), Math.max(0.01, details)]}>
         <RoundedBlock position={[-0.82, 1.62, 2.15]} scale={[0.52, 0.28, 0.12]} color="#fff5ba" roughness={0.12} emissive="#ffdc58" />
         <RoundedBlock position={[0.82, 1.62, 2.15]} scale={[0.52, 0.28, 0.12]} color="#fff5ba" roughness={0.12} emissive="#ffdc58" />
         <RoundedBlock position={[0, 1.5, 2.17]} scale={[0.52, 0.16, 0.13]} color="#17354f" roughness={0.44} />
+        {[-0.2, 0, 0.2].map((x) => (
+          <RoundedBlock key={`grille-slat-${x}`} position={[x, 1.5, 2.25]} scale={[0.055, 0.24, 0.04]} color="#c9d3d5" roughness={0.26} metalness={0.48} />
+        ))}
         <RoundedBlock position={[0, 2.86, -0.36]} scale={[1.95, 0.12, 1.94]} color="#f2f4ee" roughness={0.26} />
         <RoundedBlock position={[0, 3.01 + (finishBounce - 1) * 0.14, -0.36]} scale={[1.65, 0.16, 1.62]} color="#ffd64d" roughness={0.3} />
       </group>
@@ -344,32 +528,32 @@ const BlockyBuilder: React.FC = () => {
       <group position={[-0.98, 2.02, 0]} rotation={[0, 0, otherArm]}>
         <RoundedBlock position={[0, -0.5, 0]} scale={[0.48, 1.08, 0.55]} color="#d9413f" roughness={0.3} />
         <mesh position={[0, -1.2, 0]} castShadow>
-          <sphereGeometry args={[0.33, 10, 10]} />
+          <sphereGeometry args={[0.33, 20, 16]} />
           <meshStandardMaterial color="#f4b84c" roughness={0.35} />
         </mesh>
       </group>
       <group position={[0.98, 2.02, 0]} rotation={[0, 0, armAngle]}>
         <RoundedBlock position={[0, -0.53, 0]} scale={[0.48, 1.14, 0.55]} color="#d9413f" roughness={0.3} />
         <mesh position={[0, -1.25, 0]} castShadow>
-          <sphereGeometry args={[0.34, 10, 10]} />
+          <sphereGeometry args={[0.34, 20, 16]} />
           <meshStandardMaterial color="#f4b84c" roughness={0.35} />
         </mesh>
       </group>
 
       <mesh position={[0, 3.2, 0]} castShadow receiveShadow>
-        <cylinderGeometry args={[0.73, 0.68, 0.98, 8]} />
+        <cylinderGeometry args={[0.73, 0.68, 0.98, 16]} />
         <meshStandardMaterial color="#ffd64d" roughness={0.32} />
       </mesh>
       <mesh position={[0, 3.76, 0]} castShadow>
-        <cylinderGeometry args={[0.59, 0.63, 0.28, 8]} />
+        <cylinderGeometry args={[0.59, 0.63, 0.28, 16]} />
         <meshStandardMaterial color="#f4b84c" roughness={0.3} />
       </mesh>
       <mesh position={[-0.27, 3.28, 0.68]} castShadow>
-        <sphereGeometry args={[0.08, 8, 8]} />
+        <sphereGeometry args={[0.08, 16, 14]} />
         <meshStandardMaterial color="#172637" roughness={0.55} />
       </mesh>
       <mesh position={[0.27, 3.28, 0.68]} castShadow>
-        <sphereGeometry args={[0.08, 8, 8]} />
+        <sphereGeometry args={[0.08, 16, 14]} />
         <meshStandardMaterial color="#172637" roughness={0.55} />
       </mesh>
       <RoundedBlock position={[0, 3.0, 0.69]} scale={[0.38, 0.07, 0.05]} color="#172637" roughness={0.62} />
