@@ -1,74 +1,107 @@
-# Merakit Mobil Mini — Remotion + React + Three.js
+# Merakit Mobil di Dunia LEGO — Remotion + Three.js
 
-Video tutorial 3D berbahasa Indonesia tentang cara merakit mobil mini. Animasi dibangun dengan **React**, **Remotion**, dan **Three.js** melalui `@remotion/three`, sehingga dapat dipreview dan dirender sepenuhnya secara lokal.
+Proyek video **10 menit**, tanpa dialog dan tanpa musik, yang menampilkan
+perakitan mobil coupe retro oranye di diorama garasi LEGO. Video dibangun dengan
+**React**, **Remotion**, React Three Fiber, dan `@remotion/three`.
 
-Karakter pembuatnya adalah figur balok orisinal bernuansa kuning, merah, dan biru. Dunia videonya kini berupa bengkel mainan yang lebih detail dan halus, terinspirasi oleh referensi garasi: lantai ubin mengilap, lift mobil merah, kabinet perkakas, panel alat, rak cairan dan ban, jendela berbingkai, pipa plafon, serta mesin di atas palet.
+Seluruh pengembangan mengikuti naskah produksi di
+[`docs/lego-car-video-script.md`](docs/lego-car-video-script.md): 18.000 frame
+pada 30 fps, 50 langkah instruksi, 13 scene, kamera editorial 6-detik,
+minifig mekanik ber-rig kaku, serta sistem cue SFX deterministik.
 
-## Prasyarat
+## Fitur visual
 
-- Node.js 20 atau lebih baru
-- npm 10 atau lebih baru
+- Brick skala LEGO dengan stud 48-segmen, bevel `0.04`, dan material ABS fisik
+  (clearcoat, IOR, roughness plastik).
+- Minifig mekanik kuning/merah/biru dengan kepala 48-segmen, print wajah tetap,
+  torso tapered, tangan C-clip berongga, serta pose sendi kaku ala LEGO.
+- Coupe retro oranye 8×22 stud yang dibangun dalam 16 modul: chassis, gardan,
+  suspensi, V8, drivetrain, knalpot, roda, panel, fender, kabin, interior, dan
+  detail akhir.
+- Garasi cutaway mengacu pada referensi yang Anda berikan: dinding bata,
+  jendela, jam, AC, toolbox, pegboard, lift dua tiang, grating, hazard stripe,
+  rak cairan/tabung gas, creeper, stool, hoist, pallet, dan mesin V8.
+- Kamera deterministik dengan wide/medium/macro/top-down, DOF, AO, bloom tipis,
+  SMAA, vignette, bayangan 4096, dan ACES Filmic tone mapping.
+- Overlay manual minimal: step counter 01–50, PLI parts panel, dan panah callout.
 
-## Menjalankan secara lokal
+## Mulai lokal
 
 ```bash
 npm install
 npm run dev
 ```
 
-Buka Remotion Studio yang dicetak di terminal, lalu pilih komposisi **CarAssembly**.
+Buka Remotion Studio dan pilih komposisi **LegoCar**.
 
-## Render video
+## Render
+
+Render video penuh (10 menit):
 
 ```bash
 npm run render
 ```
 
-Hasil render berada di:
+Render vertical slice Scene 2 / chassis dengan supersample 2×:
 
-```text
-out/car-assembly.mp4
+```bash
+npm run render:scene2
 ```
 
-Untuk membuat gambar poster dari frame akhir:
+Buat poster frame final:
 
 ```bash
 npm run still
 ```
 
-## Spesifikasi video
+Output tersimpan di direktori `out/`.
 
-| Properti | Nilai |
-| --- | --- |
-| Komposisi | `CarAssembly` |
-| Ukuran | 1920 × 1080 |
-| FPS | 30 |
-| Durasi | 600 frame / 20 detik |
-| Bahasa | Indonesia |
+> Render penuh memiliki 18.000 frame. Untuk QA, render scene per scene terlebih
+> dahulu dan gunakan concurrency rendah seperti yang sudah ditetapkan pada script.
 
-## Alur video
+## Audio SFX
 
-1. **Siapkan rangka** — sasis turun ke meja perakitan.
-2. **Pasang empat roda** — roda dikunci satu per satu di poros.
-3. **Kunci bodi & kabin** — bodi merah dan kabin masuk ke rangka.
-4. **Tambahkan detail** — lampu dan atap menyelesaikan mobil.
-5. **Mobil siap jalan** — mobil bergerak maju sebagai penutup.
+Naskah mensyaratkan SFX, tanpa narasi atau musik. Karena tidak ada file audio
+berlisensi yang diberikan, cue sheet sudah tersedia di `src/audio/cues.ts`,
+namun mix dinonaktifkan secara default supaya render tidak gagal akibat aset yang
+hilang.
 
-## Struktur proyek
+1. Tambahkan file WAV berlisensi ke `public/sfx/` sesuai
+   [`public/sfx/README.md`](public/sfx/README.md).
+2. Ubah `soundEnabled: false` menjadi `true` dalam `src/Root.tsx`.
+
+## Struktur
 
 ```text
 src/
-  index.ts              # Entry point Remotion
-  Root.tsx              # Definisi komposisi
-  CarAssembly.tsx       # Scene Three.js, karakter, mobil, dan overlay tutorial
-public/reference/
-  block-builder-reference.jpg  # Referensi visual karakter yang diberikan pengguna
-  garage-moc-reference.webp    # Referensi tata desain garasi yang diberikan pengguna
+  Main.tsx                    # Komposisi 10-menit dan post-processing
+  lego/
+    Brick.tsx                 # ABS, rounded parts, brick/stud, Technic pin
+    Minifigure.tsx            # Mekanik LEGO dengan rig sendi kaku
+    RetroCoupe.tsx            # Coupe 16-modul dan animasi snap-in
+    snapIn.ts                 # Animasi klik deterministik
+  scenes/
+    timeline.ts               # 13 scene, 18.000 frame, 100 camera shots
+    CameraRig.tsx             # Kamera keyframe berbasis useCurrentFrame
+    Garage.tsx                # Diorama garage cutaway
+  overlay/ManualOverlay.tsx   # Step, PLI, dan callout
+  audio/
+    cues.ts                   # Cue sheet SFX deterministik
+    SfxTrack.tsx              # Router audio opsional
+public/
+  reference/                  # Gambar referensi dari pengguna
+  sfx/README.md               # Manifest file audio yang diperlukan
+docs/
+  lego-car-video-script.md    # Naskah produksi sumber
 ```
 
-## Kustomisasi cepat
+## Spesifikasi
 
-- Ubah durasi/FPS/resolusi di `src/Root.tsx`.
-- Ubah teks langkah dan warna aksen pada konstanta `STEPS` di `src/CarAssembly.tsx`.
-- Ubah nama bengkel dari `defaultProps.workshopName` di `src/Root.tsx`.
-- Ubah bentuk mobil, figur, maupun bengkel pada komponen `Car`, `BlockyBuilder`, dan `Workshop`. Bengkel yang lebih detail juga dipisahkan ke komponen `GarageWindow`, `ToolChest`, `WorkshopLift`, `PartsShelf`, `TireRack`, dan `EngineOnPallet`.
+| Properti | Nilai |
+| --- | --- |
+| Komposisi | `LegoCar` |
+| Durasi | 18.000 frame / 10:00 |
+| Frame rate | 30 fps |
+| Resolusi | 1920×1080 |
+| Render macro | `--scale=2` disarankan |
+| Audio | SFX saja, tanpa narasi/musik |
